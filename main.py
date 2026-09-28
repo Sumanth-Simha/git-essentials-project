@@ -39,7 +39,18 @@ def view_expense(expense):
         print("expense list:")
         for i, item in enumerate(expense, 1):
             print(f"{i}. {item}")
-
+def split_expense(expense):
+    if not expense:
+        print("no expenses to split")
+        return
+    total_expense = sum(float(item) for item in expense)
+    num_people = int(input("enter number of people to split the expense: "))
+    if num_people <= 0:
+        print("number of people must be greater than zero")
+        return
+    split_amount = total_expense / num_people
+    print(f"total expense: {total_expense}")
+    print(f"each person should pay: {split_amount}")        
 
 def main():
     expense = load_expenses()
