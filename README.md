@@ -17,8 +17,8 @@ A simple web application built using Python and Flask to demonstrate Git, GitHub
 
 **1. Clone the repository**
 ```bash
-git clone <repository-url>
-cd student-expense-tracker
+git clone https://github.com/Sumanth-Simha/git-essentials-project
+cd git-essentials-project
 ```
 
 **2. Create a virtual environment**
