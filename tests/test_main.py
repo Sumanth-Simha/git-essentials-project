@@ -18,6 +18,7 @@ class ExpenseTrackerTests(unittest.TestCase):
             main, "EXPENSES_FILE", str(self.expenses_file)
         )
         self.expenses_file_patch.start()
+        self.client = main.app.test_client()
 
     def tearDown(self):
         self.expenses_file_patch.stop()
@@ -97,6 +98,39 @@ class ExpenseTrackerTests(unittest.TestCase):
         self.assertIn("invalid choice", output.getvalue())
         self.assertIn("exiting the program", output.getvalue())
         self.assertEqual(mock_input.call_count, 2)
+
+    def test_health_endpoint(self):
+        response = self.client.get("/health")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {"status": "ok"})
+
+    def test_create_expense_endpoint(self):
+        response = self.client.post("/expenses", json={"expense": "22.50"})
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.get_json()["expense"], "22.50")
+        self.assertEqual(main.load_expenses(), ["12.50", "7.50", "22.50"])
+
+    def test_create_expense_rejects_non_numeric_value(self):
+        response = self.client.post("/expenses", json={"expense": "rent"})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "expense must be a number")
+
+    def test_split_endpoint_returns_per_person_amount(self):
+        response = self.client.get("/expenses/split?people=2")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["per_person"], 10.0)
+
+    def test_split_endpoint_rejects_invalid_people_count(self):
+        response = self.client.get("/expenses/split?people=0")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_json()["error"], "people must be greater than zero"
+        )
 
 
 if __name__ == "__main__":

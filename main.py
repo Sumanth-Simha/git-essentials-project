@@ -1,7 +1,10 @@
 import json
 import os
 
+from flask import Flask, jsonify, render_template, request
+
 EXPENSES_FILE = "expenses.json"
+app = Flask(__name__)
 
 
 def load_expenses():
@@ -20,9 +23,6 @@ def load_expenses():
 def save_expenses(expenses):
     with open(EXPENSES_FILE, "w") as f:
         json.dump(expenses, f, indent=2)
-
-
-print("student expense tracker  ")
 
 
 def add_expense(expense):
@@ -71,5 +71,48 @@ def main():
             print("invalid choice")
 
 
+@app.get("/")
+def index():
+    expenses = load_expenses()
+    total = sum(float(item) for item in expenses)
+    return render_template("index.html", expenses=expenses, total=total)
+
+
+@app.post("/expenses")
+def create_expense():
+    payload = request.get_json(silent=True) or {}
+    value = payload.get("expense")
+    if value is None or not str(value).strip():
+        return jsonify(error="expense is required"), 400
+    try:
+        float(value)
+    except (TypeError, ValueError):
+        return jsonify(error="expense must be a number"), 400
+
+    expenses = load_expenses()
+    expenses.append(str(value).strip())
+    save_expenses(expenses)
+    return jsonify(expense=expenses[-1], expenses=expenses), 201
+
+
+@app.get("/expenses/split")
+def split_expenses():
+    expenses = load_expenses()
+    try:
+        people = int(request.args.get("people", ""))
+    except ValueError:
+        return jsonify(error="people must be a whole number"), 400
+    if people <= 0:
+        return jsonify(error="people must be greater than zero"), 400
+
+    total = sum(float(item) for item in expenses)
+    return jsonify(total=total, people=people, per_person=total / people)
+
+
+@app.get("/health")
+def health():
+    return jsonify(status="ok")
+
+
 if __name__ == "__main__":
-    main()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5000")))
