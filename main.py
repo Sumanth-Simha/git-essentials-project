@@ -34,11 +34,12 @@ def add_expense(expense):
 
 def view_expense(expense):
     if not expense:
-        print("no expenses found")
-    else:
-        print("expense list:")
-        for i, item in enumerate(expense, 1):
-            print(f"{i}. {item}")
+        print("no expenses to view")
+        return
+    print("expenses:")
+    for idx, item in enumerate(expense, start=1):
+        print(f"{idx}. {item}")
+    split_expense(expense)
 def split_expense(expense):
     if not expense:
         print("no expenses to split")
